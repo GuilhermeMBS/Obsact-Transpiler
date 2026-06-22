@@ -1,14 +1,14 @@
 # Nome do executável final
-TARGET = transpilador
+TARGET = transpiler
 
 # Arquivos fonte do Flex e Bison
-FLEX_SRC = lexico.l
-BISON_SRC = sintatico.y
+FLEX_SRC = lexical.l
+BISON_SRC = syntax.y
 
 # Arquivos C gerados automaticamente
 FLEX_OUT = lex.yy.c
-BISON_OUT = sintatico.tab.c
-BISON_HDR = sintatico.tab.h
+BISON_OUT = syntax.tab.c
+BISON_HDR = syntax.tab.h
 
 # Compilador C
 CC = gcc

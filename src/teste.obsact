@@ -1,0 +1,4 @@
+dispositivo: {Termometro}
+dispositivo: {Ventilador}
+set temperatura = 40.
+set potencia = 90.
