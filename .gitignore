@@ -1,15 +1,15 @@
 # Executáveis do projeto (Windows e Linux/Mac)
 *.exe
 *.out
-transpilador
+transpiler
 
 # Arquivos C gerados automaticamente pelo Flex e Bison
 lex.yy.c
-sintatico.tab.c
-sintatico.tab.h
+syntax.tab.c
+syntax.tab.h
 
 # Arquivos de log ou relatórios opcionais que o Bison pode gerar
-*.output
+*.output.c
 
 # Pastas de configuração do VS Code ou do sistema
 .vscode/

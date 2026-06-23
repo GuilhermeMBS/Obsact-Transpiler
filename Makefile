@@ -1,35 +1,39 @@
-# Nome do executável final
-TARGET = transpilador
+# Final executable name
+TARGET = transpiler
 
-# Arquivos fonte do Flex e Bison
-FLEX_SRC = lexico.l
-BISON_SRC = sintatico.y
+# Source and test file paths
+FLEX_SRC = src/lexical/lexical.l
+BISON_SRC = src/syntax/syntax.y
+TEST_FILE = tests/test.obsact
 
-# Arquivos C gerados automaticamente
+# Automatically generated C files (kept at root for easier compilation)
 FLEX_OUT = lex.yy.c
-BISON_OUT = sintatico.tab.c
-BISON_HDR = sintatico.tab.h
+BISON_OUT = syntax.tab.c
+BISON_HDR = syntax.tab.h
 
-# Compilador C
+# C Compiler configurations
 CC = gcc
 CFLAGS = -Wall
 
-# Alvo principal (o que acontece quando você digita apenas 'make')
+# Main target (default action when executing 'make')
 all: $(TARGET)
 
+# Links generated C objects to create the final executable
 $(TARGET): $(BISON_OUT) $(FLEX_OUT)
 	$(CC) $(CFLAGS) $(BISON_OUT) $(FLEX_OUT) -o $(TARGET)
 
+# Compiles the syntax specification using Bison
 $(BISON_OUT) $(BISON_HDR): $(BISON_SRC)
 	win_bison -d $(BISON_SRC)
 
+# Compiles the lexical specification using Flex
 $(FLEX_OUT): $(FLEX_SRC) $(BISON_HDR)
 	win_flex $(FLEX_SRC)
 
-# Alvo para limpar os arquivos gerados e recomeçar do zero
+# Clean rule adapted to Windows using PowerShell to prevent CreateProcess errors
 clean:
-	del /f $(TARGET).exe $(FLEX_OUT) $(BISON_OUT) $(BISON_HDR)
+	powershell -Command "Remove-Item -Force $(TARGET).exe, $(FLEX_OUT), $(BISON_OUT), $(BISON_HDR) -ErrorAction SilentlyContinue"
 
-# Alvo para rodar o teste rapidamente
+# Test execution shortcut using PowerShell and the updated tests path
 test: all
-	./$(TARGET) < teste.obsact
+	powershell -Command "Get-Content $(TEST_FILE) | ./$(TARGET)"
