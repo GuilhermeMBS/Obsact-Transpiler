@@ -15,7 +15,7 @@ BISON_HDR = syntax.tab.h
 
 # C Compiler configurations
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -I.
 
 # Main target (default action when executing 'make')
 all: setup $(TARGET)
@@ -36,14 +36,14 @@ $(BISON_OUT) $(BISON_HDR): $(BISON_SRC)
 $(FLEX_OUT): $(FLEX_SRC) $(BISON_HDR)
 	win_flex $(FLEX_SRC)
 
-# Clean rule adapted to Windows
+# Clean rule adapted to Windows (Deletes generated files, but keeps directories)
 clean:
-	powershell -Command "Remove-Item -Force $(TARGET).exe, $(FLEX_OUT), $(BISON_OUT), $(BISON_HDR), output.c -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force $(OUT_DIR) -ErrorAction SilentlyContinue"
+	powershell -Command "Remove-Item -Force $(TARGET).exe, $(FLEX_OUT), $(BISON_OUT), $(BISON_HDR), output.c -ErrorAction SilentlyContinue; Remove-Item -Force $(OUT_TESTS_DIR)/*.c, $(OUT_TESTS_DIR)/*.exe -ErrorAction SilentlyContinue"
 
-# Transpiles all .obsact tests in the examples folder and moves them to out_tests
+# Transpiles all .obsact tests in the examples folder and moves them to out_tests if successful
 tests: all
-	powershell -Command '$$files = Get-ChildItem -Path $(TEST_DIR) -Filter *.obsact; foreach ($$f in $$files) { Write-Host ("[Transpilando] " + $$f.Name); Get-Content $$f.FullName | ./$(TARGET); Move-Item -Path output.c -Destination ("$(OUT_TESTS_DIR)/" + $$f.BaseName + ".c") -Force }'
+	powershell -Command '$$files = Get-ChildItem -Path $(TEST_DIR) -Filter *.obsact; foreach ($$f in $$files) { Write-Host ("`n[Transpiling] " + $$f.Name); Get-Content $$f.FullName | ./$(TARGET); if (Test-Path output.c) { Move-Item -Path output.c -Destination ("$(OUT_TESTS_DIR)/" + $$f.BaseName + ".c") -Force } }'
 
 # Compiles and executes all the generated .c files in the out_tests folder
 run-tests:
-	powershell -Command '$$files = Get-ChildItem -Path $(OUT_TESTS_DIR) -Filter *.c; foreach ($$f in $$files) { Write-Host ("`n--- [Executando] " + $$f.Name + " ---"); $(CC) $(CFLAGS) $$f.FullName -o ("$(OUT_TESTS_DIR)/" + $$f.BaseName + ".exe"); if ($$?) { & ("./$(OUT_TESTS_DIR)/" + $$f.BaseName + ".exe") } else { Write-Host "Falha ao compilar " $$f.Name } }'
+	powershell -Command '$$files = Get-ChildItem -Path $(OUT_TESTS_DIR) -Filter *.c; foreach ($$f in $$files) { Write-Host ("`n--- [Running] " + $$f.Name + " ---"); $(CC) $(CFLAGS) $$f.FullName -o ("$(OUT_TESTS_DIR)/" + $$f.BaseName + ".exe"); if ($$?) { & ("./$(OUT_TESTS_DIR)/" + $$f.BaseName + ".exe") } else { Write-Host "Failed to compile " $$f.Name } }'

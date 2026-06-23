@@ -84,7 +84,7 @@ device:
         } else {
             printf("    // Registering device with sensor bound\n");
             printf("    const char* %s = \"%s\";\n", $4, $4);
-            printf("    int %s = 0; // Implicit initialization to 0\n\n", $5);
+            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $5);
             free($5);
         }
         free($4);
@@ -203,9 +203,9 @@ actexecute:
 actalert:
     TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS TOKEN_IDENTIFIER {
         if ($4 == NULL) {
-            printf("    alerta2(\"%s\", %s);\n\n", $6, $3);
+            printf("    alerta_sem_var(\"%s\", %s);\n\n", $6, $3);
         } else {
-            printf("    alerta3(\"%s\", %s, %s);\n\n", $6, $3, $4);
+            printf("    alerta_com_var(\"%s\", %s, %s);\n\n", $6, $3, $4);
             free($4);
         }
         free($3);
@@ -227,23 +227,38 @@ void yyerror(const char *s) {
 }
 
 int main() {
+    // Redirects standard output to output.c
     if (freopen("output.c", "w", stdout) == NULL) {
         fprintf(stderr, "Error: Could not redirect output to output.c.\n");
         return 1;
     }
 
+    // Prints the header into the C file
     printf("#include <stdio.h>\n");
     printf("#include <stdbool.h>\n");
     printf("#include \"src/includes/obsact_func.h\"\n\n");
     printf("int main() {\n");
 
-    // Runs the syntax analysis (all standard printfs go to output.c)
-    yyparse();
+    // Runs the syntax analysis and stores the status (0 = Success, 1 = Failure)
+    int parse_status = yyparse();
 
+    // Closes the main block of the C file
     printf("    return 0;\n");
     printf("}\n");
 
-    fprintf(stderr, "\n[LOG] Compiled and transpiled successfully! Zero syntax errors.\n\n");
+    // Releases the file in Windows so it can be manipulated/deleted if necessary
+    fclose(stdout);
 
-    return 0;
+    // ---- LOGGING AND ERROR CLEANUP LOGIC ----
+    if (parse_status == 0) {
+        // Success: Keeps the output.c file intact
+        fprintf(stderr, "[LOG] Compiled and transpiled successfully! Zero syntax errors.\n");
+    } else {
+        // Failure: Warns the user and deletes the incomplete output.c
+        fprintf(stderr, "[LOG] FAILED: The file contains syntax errors and will not be generated.\n");
+        remove("output.c"); 
+    }
+
+    // Returns the actual status to the Makefile (makes scripts handle errors properly)
+    return parse_status;
 }

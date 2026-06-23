@@ -2,7 +2,6 @@
 #define OBSACT_FUNC_H
 
 #include <stdio.h>
-#include <stdbool.h>
 
 // Funcoes de suporte extraidas do PDF do laboratorio
 static inline int ligar(const char* namedevice) {
@@ -20,12 +19,12 @@ static inline int verificar(const char* namedevice) {
     return 1;
 }
 
-static inline void alerta2(const char* namedevice, const char* msg) {
+static inline void alerta_sem_var(const char* namedevice, const char* msg) {
     printf("%s recebeu o alerta:\n", namedevice);
     printf("%s\n", msg);
 }
 
-static inline void alerta3(const char* namedevice, const char* msg, int var) {
+static inline void alerta_com_var(const char* namedevice, const char* msg, int var) {
     printf("%s recebeu o alerta:\n", namedevice);
     printf("%s %d\n", msg, var);
 }
