@@ -1,0 +1,15 @@
+PROGRAM		--> DEVICES CMDS
+DEVICES		--> DEVICE DEVICES | DEVICE
+DEVICE 		--> dispositivo: {namedevice WITH_OBS}
+CMDS 		--> CMD. CMDS | CMD
+CMD 		--> ATTRIB | OBSATC | ACT
+ATTRIB		--> set observation = EXP
+EXP		--> VAR | ACTEXECUTE
+OBSACT 		--> se OBS entao CMDS | se OBS entao CMDS senao CMDS
+OBS		--> observation oplogic VAR | observation oplogic VAR && OBS
+VAR 		--> num | bool
+ACT 		--> ACTEXECUTE | ACTALERT
+ACTEXECUTE 	--> ACTION namedevice
+ACTALERT	--> enviar alerta (msg WITH_OBS) namedevice
+WITH_OBS	--> , observation | eps
+ACTION 		--> ligar | desligar | verificar
