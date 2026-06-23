@@ -10,7 +10,7 @@
 
 %%
 
-   /* Symbols */
+    /* Symbols */
 "{"                     { return TOKEN_OPEN_BRACE; }
 "}"                     { return TOKEN_CLOSE_BRACE; }
 "("                     { return TOKEN_OPEN_PARENTHESIS; }
@@ -21,7 +21,7 @@
 ","                     { return TOKEN_COMMA; }
 "&&"                    { return TOKEN_AND; }
 
-   /* Keywords */
+    /* Keywords */
 "dispositivo"           { return TOKEN_DEVICE_KW; }
 "set"                   { return TOKEN_SET_KW; }
 "se"                    { return TOKEN_IF_KW; }
@@ -33,7 +33,7 @@
 "desligar"              { return TOKEN_TURN_OFF_KW; }
 "verificar"             { return TOKEN_CHECK_KW; }
 
-   /* Logic Operators (oplogic) */
+    /* Logic Operators (oplogic) */
 ">"                     { yylval.str_val = strdup(yytext); return TOKEN_OPLOGIC; }
 "<"                     { yylval.str_val = strdup(yytext); return TOKEN_OPLOGIC; }
 ">="                    { yylval.str_val = strdup(yytext); return TOKEN_OPLOGIC; }
@@ -41,7 +41,7 @@
 "=="                    { yylval.str_val = strdup(yytext); return TOKEN_OPLOGIC; }
 "!="                    { yylval.str_val = strdup(yytext); return TOKEN_OPLOGIC; }
 
-   /* Boolean Values */
+    /* Boolean Values */
 [Tt][Rr][Uu][Ee]        { 
                             yylval.bool_val = true;
                             return TOKEN_BOOL;
@@ -52,7 +52,7 @@
                             return TOKEN_BOOL;
                         }
 
-   /* Regex Rules for Identifiers, Numbers, and Strings */
+    /* Regex Rules for Identifiers, Numbers, and Strings */
 \"([^"\\]|\\.)*\"       { 
                             yylval.str_val = strdup(yytext);
                             return TOKEN_MSG;

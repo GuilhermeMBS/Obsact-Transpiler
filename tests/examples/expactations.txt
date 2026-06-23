@@ -1,0 +1,11 @@
+1.  Válido
+2.  Ponto isolado --> comando de não fazer nada
+3.  Entao sem nada --> condicional verdadeira
+4.  Umidade não definida / Movimento não definido --> considera 0 ou manda aviso de erro?
+5.  Set {dispositivo} inválido / umidade não definida / 
+    Alerta sem () / umidificador não inicializado / movimento não inicializado --> ?
+6.  Umidade não definida / Alerta sem () --> ?
+7.  Comando sem ponto --> ?
+8.  Comando sem ponto --> ?
+9.  Comando sem ponto --> ?
+10. Temperatura não definida --> ?
