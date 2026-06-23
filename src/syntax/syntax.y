@@ -10,14 +10,14 @@ int yylex(void);
 extern int yylineno;
 %}
 
-/* Define os tipos de dados que trafegam do Flex para o Bison */
+/* Defines the data types that travel from Flex to Bison */
 %union {
     char* str_val;
     unsigned int int_val;
     bool bool_val;
 }
 
-/* Declaração dos Tokens informando o tipo de dado que eles carregam */
+/* Token declarations indicating the data type they carry */
 %token TOKEN_OPEN_BRACE TOKEN_CLOSE_BRACE
 %token TOKEN_OPEN_PARENTHESIS TOKEN_CLOSE_PARENTHESIS
 %token TOKEN_EQUAL
@@ -46,18 +46,18 @@ extern int yylineno;
 %token <int_val> TOKEN_NUM
 %token <bool_val> TOKEN_BOOL
 
-/* Configuração de tipos para as regras que retornam ou processam valores de texto/lógica */
+/* Type configuration for rules that return or process text/logic values */
 %type <str_val> with_obs exp actexecute obs action
 %type <str_val> value
 
-/* Resoluções de Precedência e Ambiguidade */
+/* Precedence and Ambiguity Resolutions */
 %left TOKEN_AND
 %nonassoc TOKEN_ELSE_KW
 %expect 1
 
 %%
 
-/* PROGRAM -> Agora aceita opcionalmente que o Flex termine de ler espaços/novas linhas vazias */
+/* PROGRAM -> Now optionally accepts Flex finishing reading empty spaces/newlines */
 program:
     devices cmds end_of_file { 
         printf("    // Transpilation finished successfully.\n"); 
@@ -65,8 +65,8 @@ program:
 ;
 
 end_of_file:
-    /* vazio */
-  | TOKEN_PERIOD /* absorve algum ponto residual se houver no escopo global */
+    /* empty */
+  | TOKEN_PERIOD /* absorbs any residual period if present in the global scope */
 ;
 
 /* DEVICES -> DEVICES DEVICE | DEVICE */
@@ -91,23 +91,23 @@ device:
     }
 ;
 
-/* REGRA MÁGICA REAPROVEITÁVEL (Fatoração do ", observation") */
+/* Factoring of ", observation" */
 with_obs:
     TOKEN_COMMA TOKEN_IDENTIFIER { 
         $$ = $2; 
     }
-  | /* vazio = épsilon seguro */ { 
+  | /* empty = safe epsilon */ { 
         $$ = NULL; 
     }
 ;
 
-/* CMDS -> Lista de comandos (agora sem o ponto engessado) */
+/* CMDS -> List of commands */
 cmds:
     cmds cmd
   | cmd
 ;
 
-/* CMD -> Atribuição e Ação pedem ponto. OBSACT (bloco if) não pede ponto extra! */
+/* CMD -> Assignment and Action require a period. OBSACT (if block) does not require an extra period! */
 cmd:
     attrib TOKEN_PERIOD
   | obsact
@@ -130,7 +130,7 @@ exp:
   | actexecute { $$ = $1; }
 ;
 
-/* VALUE -> num | bool (retorna string para a regra EXP) */
+/* VALUE -> num | bool (returns string to the EXP rule) */
 value:
     TOKEN_NUM  { 
         char buffer[32];
@@ -142,7 +142,7 @@ value:
     }
 ;
 
-/* REGRA AUXILIAR PARA EVITAR CONFLITO DE MID-RULE ACTION */
+/* AUXILIARY RULE TO AVOID MID-RULE ACTION CONFLICT */
 if_header:
     TOKEN_IF_KW obs TOKEN_THEN_KW {
         printf("    if (%s) {\n", $2);
@@ -237,15 +237,13 @@ int main() {
     printf("#include \"src/includes/obsact_func.h\"\n\n");
     printf("int main() {\n");
 
-    // Roda a análise sintática (tudo o que for printf normal vai pro output.c)
+    // Runs the syntax analysis (all standard printfs go to output.c)
     yyparse();
 
     printf("    return 0;\n");
     printf("}\n");
 
-    // ---- MENSAGEM NO TERMINAL ----
-    // O fprintf para o stderr ignora o freopen e aparece direto na sua tela preta!
-    fprintf(stderr, "\n[LOG] Compilado e transpilado com sucesso! Zero erros de sintaxe.\n\n");
+    fprintf(stderr, "\n[LOG] Compiled and transpiled successfully! Zero syntax errors.\n\n");
 
     return 0;
 }
