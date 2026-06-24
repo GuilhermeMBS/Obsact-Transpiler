@@ -1,5 +1,6 @@
 %{
 #define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@ extern int yylineno;
 %token <bool_val> TOKEN_BOOL
 
 /* Type configuration for rules that return or process text/logic values */
-%type <str_val> with_obs exp actexecute obs action
+%type <str_val> with_obs exp actexecute obs action device_list
 %type <str_val> value
 
 /* Precedence and Ambiguity Resolutions */
@@ -77,24 +78,24 @@ devices:
 
 /* DEVICE -> dispositivo: { namedevice with_obs } */
 device:
-    TOKEN_DEVICE_KW TOKEN_TWO_POINTS TOKEN_OPEN_BRACE TOKEN_IDENTIFIER with_obs TOKEN_CLOSE_BRACE {
-        if ($5 == NULL) {
+    TOKEN_DEVICE_KW TOKEN_OPEN_BRACE TOKEN_IDENTIFIER with_obs TOKEN_CLOSE_BRACE {
+        if ($4 == NULL) {
             printf("    // Registering standalone device\n");
-            printf("    const char* %s = \"%s\";\n\n", $4, $4);
+            printf("    const char* %s = \"%s\";\n\n", $3, $3);
         } else {
             printf("    // Registering device with sensor bound\n");
-            printf("    const char* %s = \"%s\";\n", $4, $4);
-            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $5);
-            free($5);
+            printf("    const char* %s = \"%s\";\n", $3, $3);
+            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $4);
+            free($4);
         }
-        free($4);
+        free($3);
     }
 ;
 
 /* Factoring of ", observation" */
 with_obs:
     TOKEN_COMMA TOKEN_IDENTIFIER { 
-        $$ = $2; 
+        $$ = $2;
     }
   | /* empty = safe epsilon */ { 
         $$ = NULL; 
@@ -188,28 +189,58 @@ act:
   | actalert
 ;
 
-/* ACTEXECUTE -> ACTION namedevice */
+/* ACTEXECUTE -> ACTION namedevice (Fixed: variables are now passed as identifiers, not quoted strings) */
 actexecute:
     action TOKEN_IDENTIFIER {
         char *buffer;
-        asprintf(&buffer, "%s(\"%s\")", $1, $2);
+        asprintf(&buffer, "%s(%s)", $1, $2);
         $$ = buffer;
         free($1);
         free($2);
     }
 ;
 
-/* ACTALERT -> enviar alerta ( msg with_obs ) namedevice */
+/* ACTALERT -> Single device alert or broadcast alert (para todos:) */
 actalert:
     TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS TOKEN_IDENTIFIER {
+        // Option A: Alert to a single explicit device variable
         if ($4 == NULL) {
-            printf("    alerta_sem_var(\"%s\", %s);\n\n", $6, $3);
+            printf("    alerta_sem_var(%s, %s);\n\n", $6, $3);
         } else {
-            printf("    alerta_com_var(\"%s\", %s, %s);\n\n", $6, $3, $4);
+            printf("    alerta_com_var(%s, %s, %s);\n\n", $6, $3, $4);
             free($4);
         }
         free($3);
         free($6);
+    }
+  | TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS TOKEN_FOR_ALL_KW TOKEN_TWO_POINTS device_list {
+        // Option B: Extra Feature Broadcast (para todos:)
+        char* token = strtok($8, "|");
+        while (token != NULL) {
+            if ($4 == NULL) {
+                printf("    alerta_sem_var(%s, %s);\n", token, $3);
+            } else {
+                printf("    alerta_com_var(%s, %s, %s);\n", token, $3, $4);
+            }
+            token = strtok(NULL, "|");
+        }
+        printf("\n");
+        
+        free($8);
+        free($3);
+        if ($4 != NULL) free($4);
+    }
+;
+
+/* DEVICE_LIST -> Separates broadcast target tokens with internal pipes for tokenizing */
+device_list:
+    TOKEN_IDENTIFIER {
+        $$ = $1;
+    }
+  | device_list TOKEN_COMMA TOKEN_IDENTIFIER {
+        asprintf(&$$, "%s|%s", $1, $3);
+        free($1);
+        free($3);
     }
 ;
 

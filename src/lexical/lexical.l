@@ -8,8 +8,7 @@
 
 %option yylineno
 
-%%
-
+%% 
     /* Symbols */
 "{"                     { return TOKEN_OPEN_BRACE; }
 "}"                     { return TOKEN_CLOSE_BRACE; }
@@ -22,7 +21,7 @@
 "&&"                    { return TOKEN_AND; }
 
     /* Keywords */
-"dispositivo"           { return TOKEN_DEVICE_KW; }
+"dispositivo:"          { return TOKEN_DEVICE_KW; }
 "set"                   { return TOKEN_SET_KW; }
 "se"                    { return TOKEN_IF_KW; }
 "senao"                 { return TOKEN_ELSE_KW; }

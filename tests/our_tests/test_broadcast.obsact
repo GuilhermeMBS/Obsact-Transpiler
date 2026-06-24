@@ -1,0 +1,5 @@
+dispositivo : { PortaPrincipal }
+dispositivo : { PortaFundos }
+dispositivo : { Janela }
+
+enviar alerta ("Travar todas as entradas") para todos: PortaPrincipal, PortaFundos, Janela .
