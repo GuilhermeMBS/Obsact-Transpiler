@@ -1,5 +1,5 @@
-dispositivo : { Termometro , temperatura }
-dispositivo : { ArCondicionado , potencia }
-dispositivo : { Umidificador , umidade }
+dispositivo : { PortaPrincipal }
+dispositivo : { PortaFundos }
+dispositivo : { Janela }
 
-enviar alerta ("Desligamento geral em 5 minutos") para todos: Termometro, ArCondicionado, Umidificador .
+enviar alerta ("Travar todas as entradas") para todos: PortaPrincipal, PortaFundos, Janela .
