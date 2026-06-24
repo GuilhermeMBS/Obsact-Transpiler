@@ -78,17 +78,17 @@ devices:
 
 /* DEVICE -> dispositivo: { namedevice with_obs } */
 device:
-    TOKEN_DEVICE_KW TOKEN_TWO_POINTS TOKEN_OPEN_BRACE TOKEN_IDENTIFIER with_obs TOKEN_CLOSE_BRACE {
-        if ($5 == NULL) {
+    TOKEN_DEVICE_KW TOKEN_OPEN_BRACE TOKEN_IDENTIFIER with_obs TOKEN_CLOSE_BRACE {
+        if ($4 == NULL) {
             printf("    // Registering standalone device\n");
-            printf("    const char* %s = \"%s\";\n\n", $4, $4);
+            printf("    const char* %s = \"%s\";\n\n", $3, $3);
         } else {
             printf("    // Registering device with sensor bound\n");
-            printf("    const char* %s = \"%s\";\n", $4, $4);
-            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $5);
-            free($5);
+            printf("    const char* %s = \"%s\";\n", $3, $3);
+            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $4);
+            free($4);
         }
-        free($4);
+        free($3);
     }
 ;
 

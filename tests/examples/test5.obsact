@@ -1,8 +1,8 @@
-dispositivo : { celular , movimento }
-dispositivo : { higrometro , umidade }
-dispositivo : { lampada , potenciaLampada }
-dispositivo : { umidificador , potenciaUmidificador }
-dispositivo : { Monitor }
+dispositivo: { celular , movimento }
+dispositivo: { higrometro , umidade }
+dispositivo: { lampada , potenciaLampada }
+dispositivo: { umidificador , potenciaUmidificador }
+dispositivo: { Monitor }
 set { lampada , potenciaLampada } = 100 .
 se umidade < 40 entao
 enviar alerta " Ar seco detectado " Monitor .
