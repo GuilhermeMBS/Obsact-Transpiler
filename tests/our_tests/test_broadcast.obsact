@@ -1,0 +1,5 @@
+dispositivo : { Termometro , temperatura }
+dispositivo : { ArCondicionado , potencia }
+dispositivo : { Umidificador , umidade }
+
+enviar alerta ("Desligamento geral em 5 minutos") para todos: Termometro, ArCondicionado, Umidificador .
