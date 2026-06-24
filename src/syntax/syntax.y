@@ -1,6 +1,5 @@
 %{
 #define _GNU_SOURCE
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -12,14 +11,12 @@ int yylex(void);
 extern int yylineno;
 %}
 
-/* Defines the data types that travel from Flex to Bison */
 %union {
     char* str_val;
     unsigned int int_val;
     bool bool_val;
 }
 
-/* Token declarations indicating the data type they carry */
 %token TOKEN_OPEN_BRACE TOKEN_CLOSE_BRACE
 %token TOKEN_OPEN_PARENTHESIS TOKEN_CLOSE_PARENTHESIS
 %token TOKEN_EQUAL
@@ -48,18 +45,18 @@ extern int yylineno;
 %token <int_val> TOKEN_NUM
 %token <bool_val> TOKEN_BOOL
 
-/* Type configuration for rules that return or process text/logic values */
-%type <str_val> with_obs exp actexecute obs action device_list namedevice observation
-%type <str_val> value
+%type <str_val> with_obs exp actexecute obs action device_list namedevice observation value
 
-/* Precedence and Ambiguity Resolutions */
+/* Precedence for logical operators and dangling else resolution */
 %left TOKEN_AND
 %nonassoc TOKEN_ELSE_KW
 %expect 1
 
+/* Enable detailed syntax error reporting */
+%define parse.error detailed
+
 %%
 
-/* PROGRAM -> Optionally accepts clean end-of-file residues */
 program:
     devices cmds end_of_file { 
         printf("    // Transpilation finished successfully.\n"); 
@@ -67,17 +64,16 @@ program:
 ;
 
 end_of_file:
-    /* empty */
-  | TOKEN_PERIOD /* absorbs any residual trailing period */
+    /* Empty rule to absorb optional trailing periods */
+  | TOKEN_PERIOD 
 ;
 
-/* DEVICES -> DEVICES DEVICE | DEVICE */
 devices:
     devices device
   | device
 ;
 
-/* DEVICE -> dispositivo: { namedevice with_obs } */
+/* Device registration rule */
 device:
     TOKEN_DEVICE_KW TOKEN_TWO_POINTS TOKEN_OPEN_BRACE namedevice with_obs TOKEN_CLOSE_BRACE {
         if ($5 == NULL) {
@@ -86,37 +82,30 @@ device:
         } else {
             printf("    // Registering device with sensor bound\n");
             printf("    const char* %s = \"%s\";\n", $4, $4);
-            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $5);
+            printf("    unsigned int %s = 0; // Implicit initialization\n\n", $5);
             free($5);
         }
         free($4);
     }
 ;
 
-/* Factoring of ", observation" */
 with_obs:
-    TOKEN_COMMA observation { 
-        $$ = $2; 
-    }
-  | /* empty = safe epsilon */ { 
-        $$ = NULL; 
-    }
+    TOKEN_COMMA observation { $$ = $2; }
+  | /* Empty transition */ { $$ = NULL; }
 ;
 
-/* CMDS -> List of commands */
 cmds:
     cmds cmd
   | cmd
 ;
 
-/* CMD -> Assignment and Action require a period. OBSACT (if block) does not require an extra period! */
 cmd:
     attrib TOKEN_PERIOD
   | obsact
   | act TOKEN_PERIOD
 ;
 
-/* ATTRIB -> set observation = EXP */
+/* Assignment rule */
 attrib:
     TOKEN_SET_KW observation TOKEN_EQUAL exp {
         printf("    // Setting sensor or expression value\n");
@@ -126,13 +115,11 @@ attrib:
     }
 ;
 
-/* EXP -> VAR | ACTEXECUTE */
 exp:
     value      { $$ = $1; }
   | actexecute { $$ = $1; }
 ;
 
-/* VALUE -> num | bool (returns string to the EXP rule) */
 value:
     TOKEN_NUM  { 
         char buffer[32];
@@ -144,7 +131,6 @@ value:
     }
 ;
 
-/* AUXILIARY RULE TO AVOID MID-RULE ACTION CONFLICT */
 if_header:
     TOKEN_IF_KW obs TOKEN_THEN_KW {
         printf("    if (%s) {\n", $2);
@@ -152,7 +138,7 @@ if_header:
     }
 ;
 
-/* OBSACT -> se OBS entao CMDS | se OBS entao CMDS senao CMDS */
+/* Conditional logic handling */
 obsact:
     if_header cmd {
         printf("    }\n\n");
@@ -162,7 +148,6 @@ obsact:
     }
 ;
 
-/* OBS -> observation oplogic VAR | OBS && OBS */
 obs:
     observation TOKEN_OPLOGIC value {
         char *buffer;
@@ -181,7 +166,6 @@ obs:
     }
 ;
 
-/* ACT -> ACTEXECUTE | ACTALERT */
 act:
     actexecute { 
         printf("    %s;\n\n", $1);
@@ -190,7 +174,6 @@ act:
   | actalert
 ;
 
-/* ACTEXECUTE -> ACTION namedevice (Passed as identifiers) */
 actexecute:
     action namedevice {
         char *buffer;
@@ -201,7 +184,7 @@ actexecute:
     }
 ;
 
-/* ACTALERT -> Single device alert or broadcast alert (para todos:) */
+/* Alert system including broadcast support */
 actalert:
     TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS namedevice {
         if ($4 == NULL) {
@@ -224,18 +207,14 @@ actalert:
             token = strtok(NULL, "|");
         }
         printf("\n");
-        
         free($8);
         free($3);
         if ($4 != NULL) free($4);
     }
 ;
 
-/* DEVICE_LIST -> Builds pipe-separated list of tokens for the broadcast scanner */
 device_list:
-    namedevice {
-        $$ = $1;
-    }
+    namedevice { $$ = $1; }
   | device_list TOKEN_COMMA namedevice {
         asprintf(&$$, "%s|%s", $1, $3);
         free($1);
@@ -243,18 +222,15 @@ device_list:
     }
 ;
 
-/* ACTION -> ligar | desligar | verificar */
 action:
     TOKEN_CHECK_KW       { $$ = strdup("verificar"); }
   | TOKEN_TURN_ON_KW     { $$ = strdup("ligar"); }
   | TOKEN_TURN_OFF_KW    { $$ = strdup("desligar"); }
 ;
 
-/* ========================================================================= */
-/* VALIDAÇÕES DE CONTEXTO (Regras Intermediárias)                            */
-/* ========================================================================= */
+/* Contextual Validation Rules */
 
-/* NAMEDEVICE -> Apenas letras! Barra a compilação se encontrar números. */
+/* Validates that device names consist only of alphabetic characters */
 namedevice:
     TOKEN_IDENTIFIER {
         for (int i = 0; $1[i] != '\0'; i++) {
@@ -263,18 +239,16 @@ namedevice:
                 sprintf(error_msg, "Semantic Error: Device name '%s' contains invalid characters. Only letters are allowed.", $1);
                 yyerror(error_msg);
                 free($1);
-                YYABORT; /* Aborta o yyparse() imediatamente com falha! */
+                YYABORT; 
             }
         }
         $$ = $1;
     }
 ;
 
-/* OBSERVATION -> Aceita letras e números (apenas repassa o token) */
+/* General observation variable (accepts alphanumeric identifiers) */
 observation:
-    TOKEN_IDENTIFIER {
-        $$ = $1;
-    }
+    TOKEN_IDENTIFIER { $$ = $1; }
 ;
 
 %%
@@ -301,7 +275,6 @@ int main() {
 
     fclose(stdout);
 
-    // ---- LOGGING AND ERROR CLEANUP ----
     if (parse_status == 0) {
         fprintf(stderr, "[LOG] Compiled and transpiled successfully! Zero syntax errors.\n\n");
     } else {

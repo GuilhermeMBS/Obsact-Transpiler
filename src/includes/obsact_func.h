@@ -1,72 +1,57 @@
+/**
+ * @file obsact_func.h
+ * @brief Standard support functions for the ObsAct language runtime.
+ *
+ * This header provides the public API required by the laboratory specifications.
+ * These functions are injected into the transpiled C code to handle hardware 
+ * control commands, state verification, and alert broadcasting.
+ */
+
 #ifndef OBSACT_FUNC_H
 #define OBSACT_FUNC_H
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
+/**
+ * @brief Turns on a specific device and updates its internal state.
+ *
+ * @param namedevice The string identifier of the device to be turned on.
+ * @return int Always returns 1, indicating a successful ON state.
+ */
+int ligar(const char* namedevice);
 
-// --- Runtime Device State Manager ---
-// Guarda o estado de até 50 dispositivos simultaneamente na memória
-#define MAX_DEVICES 50
-static const char* _device_names[MAX_DEVICES];
-static int _device_states[MAX_DEVICES];
-static int _device_count = 0;
+/**
+ * @brief Turns off a specific device and updates its internal state.
+ *
+ * @param namedevice The string identifier of the device to be turned off.
+ * @return int Always returns 0, indicating a successful OFF state.
+ */
+int desligar(const char* namedevice);
 
-// Função interna invisível para o usuário que busca ou cadastra o dispositivo
-static inline int _get_device_index(const char* namedevice) {
-    // Procura se o dispositivo já existe
-    for (int i = 0; i < _device_count; i++) {
-        if (strcmp(_device_names[i], namedevice) == 0) {
-            return i;
-        }
-    }
-    // Se não existe, cadastra ele na primeira posição livre
-    if (_device_count < MAX_DEVICES) {
-        _device_names[_device_count] = namedevice;
-        _device_states[_device_count] = 0; // Inicializa sempre desligado
-        return _device_count++;
-    }
-    return -1; // Proteção contra overflow
-}
+/**
+ * @brief Verifies and prints the current status of a specific device.
+ *
+ * Queries the internal state manager to determine if the device is currently
+ * active or inactive, and prints the corresponding status formatted to standard output.
+ *
+ * @param namedevice The string identifier of the device to be verified.
+ * @return int 1 if the device is currently ON, 0 if it is OFF.
+ */
+int verificar(const char* namedevice);
 
-// --- Funções de suporte do PDF do laboratório ---
+/**
+ * @brief Sends a broadcast or direct alert message to a specific device.
+ *
+ * @param namedevice The string identifier of the target device receiving the alert.
+ * @param msg The alert message string to be printed.
+ */
+void alerta_sem_var(const char* namedevice, const char* msg);
 
-static inline int ligar(const char* namedevice) {
-    printf("%s ligado!\n", namedevice);
-    int idx = _get_device_index(namedevice);
-    if (idx >= 0) _device_states[idx] = 1; // Atualiza SÓ o dispositivo chamado
-    return 1;
-}
-
-static inline int desligar(const char* namedevice) {
-    printf("%s desligado!\n", namedevice);
-    int idx = _get_device_index(namedevice);
-    if (idx >= 0) _device_states[idx] = 0; // Atualiza SÓ o dispositivo chamado
-    return 0;
-}
-
-static inline int verificar(const char* namedevice) {
-    int idx = _get_device_index(namedevice);
-    int state = (idx >= 0) ? _device_states[idx] : 0; // Pega o estado real dele
-    
-    // O print condicional exatamente como pede o PDF
-    if (state == 1) {
-        printf("%s est ligado.\n", namedevice);
-        return 1;
-    } else {
-        printf("%s est desligado.\n", namedevice);
-        return 0;
-    }
-}
-
-static inline void alerta_sem_var(const char* namedevice, const char* msg) {
-    printf("%s recebeu o alerta:\n", namedevice);
-    printf("%s\n", msg);
-}
-
-static inline void alerta_com_var(const char* namedevice, const char* msg, int var) {
-    printf("%s recebeu o alerta:\n", namedevice);
-    printf("%s %d\n", msg, var);
-}
+/**
+ * @brief Sends an alert message to a specific device, appending a variable's value.
+ *
+ * @param namedevice The string identifier of the target device receiving the alert.
+ * @param msg The alert message string to be printed.
+ * @param var The integer value of the sensor or variable to be appended to the message.
+ */
+void alerta_com_var(const char* namedevice, const char* msg, int var);
 
 #endif // OBSACT_FUNC_H
