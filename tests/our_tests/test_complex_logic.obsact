@@ -1,0 +1,13 @@
+dispositivo : { Termometro , temperatura }
+dispositivo : { SensorUmidade , umidade }
+dispositivo : { SensorPresenca , movimento }
+dispositivo : { MotorJanela }
+
+set temperatura = 32 .
+set umidade = 85 .
+set movimento = true .
+
+se temperatura >= 30 && umidade > 80 && movimento == true entao
+    ligar MotorJanela .
+
+enviar alerta ("Clima critico detectado e presenca confirmada") para todos: Termometro, SensorUmidade, MotorJanela .

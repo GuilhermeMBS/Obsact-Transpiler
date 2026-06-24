@@ -1,5 +1,0 @@
-- O programa começa separando em duas partes: inicializando os dispositivos e passando comandos;
-- Os comandos podem ser: atribuições, condicionais, ações;
-- As atribuições podem ser setar uma observação para um valor ou booleano ou podem setá-la para ligar/desligar/verificar um dispositivo;
-- As condicionais são da forma "se (operações lógicas) entao (comandos) senao (comandos)";
-- As ações podem ser: ligar/desligar/verificar um dispositivo ou enviar um alerta.
