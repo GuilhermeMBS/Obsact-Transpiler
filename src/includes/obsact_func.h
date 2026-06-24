@@ -6,7 +6,7 @@
 #include <string.h>
 
 // --- Runtime Device State Manager ---
-// Guarda o estado de até 50 dispositivos simultaneamente na memórtia
+// Guarda o estado de até 50 dispositivos simultaneamente na memória
 #define MAX_DEVICES 50
 static const char* _device_names[MAX_DEVICES];
 static int _device_states[MAX_DEVICES];

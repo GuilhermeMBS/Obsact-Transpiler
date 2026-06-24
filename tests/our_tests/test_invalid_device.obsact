@@ -1,0 +1,6 @@
+dispositivo : { ArCondicionado3 , potencia }
+
+set potencia = 22 .
+
+se potencia > 20 entao
+    desligar ArCondicionado3 .

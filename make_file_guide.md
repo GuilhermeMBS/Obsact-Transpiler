@@ -38,14 +38,14 @@ Runs both the professor's examples and your custom tests sequentially.
 - Transpile PDF Examples Only:
 
 ```Bash
-mingw32-make tests-examples
+mingw32-make test-examples
 ```
 Processes all `.obsact` files from `tests/examples/` into `out/examples/`.
 
 - Transpile Custom Test Cases Only:
 
 ```Bash
-mingw32-make tests-ours
+mingw32-make test-ours
 ```
 Processes all `.obsact` files from `tests/our_tests/` into `out/our_tests/`.
 
@@ -75,6 +75,14 @@ To test or debug a specific `.obsact` file without triggering the entire suite a
 
 ```Bash
 mingw32-make test-single FILE=tests/our_tests/test_broadcast.obsact
+```
+
+### Executing a Single Generated C File
+
+If you have already transpiled your code and just want to re-compile and execute a specific `.c` file (useful for testing C runtime behavior or debugging the state manager), use the `run-single` macro:
+
+```bash
+mingw32-make run-single FILE=out/our_tests/test_complex_logic.c
 ```
 
 ⚠️ **Note:** Always pass the correct relative path to the FILE macro when executing test-single.

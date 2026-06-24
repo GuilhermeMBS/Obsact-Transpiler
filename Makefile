@@ -52,12 +52,12 @@ clean:
 # MACROS DE TRANSPILAÇÃO (GERA OS .c)
 # ==========================================
 
-tests-examples: all
+test-examples: all
 	@powershell -Command "Write-Host ''; Write-Host '=== [TRANSPILANDO: EXEMPLOS DO PDF] ===' -ForegroundColor Cyan; \
 	$$files = Get-ChildItem -Path $(EXAMPLES_DIR) -Filter *.obsact; \
 	foreach ($$f in $$files) { Write-Host ('[Transpilando] ' + $$f.Name); Get-Content $$f.FullName | ./$(TARGET); if (Test-Path output.c) { Move-Item -Path output.c -Destination ('$(OUT_EXAMPLES)/' + $$f.BaseName + '.c') -Force } }"
 
-tests-ours: all
+test-ours: all
 	@powershell -Command "Write-Host ''; Write-Host '=== [TRANSPILANDO: NOSSOS TESTES] ===' -ForegroundColor Yellow; \
 	$$files = Get-ChildItem -Path $(OURS_DIR) -Filter *.obsact; \
 	foreach ($$f in $$files) { Write-Host ('[Transpilando] ' + $$f.Name); Get-Content $$f.FullName | ./$(TARGET); if (Test-Path output.c) { Move-Item -Path output.c -Destination ('$(OUT_OURS)/' + $$f.BaseName + '.c') -Force } }"
@@ -89,3 +89,13 @@ test-single: all
 	else { Write-Host ''; Write-Host ('[Transpilando] $(FILE)') -ForegroundColor Green; Get-Content $(FILE) | ./$(TARGET); \
 	if (Test-Path output.c) { Move-Item -Path output.c -Destination 'out/single_test.c' -Force; \
 	Write-Host ('[Compilando C e Executando...]') -ForegroundColor Green; $(CC) -w -I. out/single_test.c -o out/single_test.exe; if ($$?) { & './out/single_test.exe' } } }"
+
+# ==========================================
+# MACRO PARA COMPILAR E RODAR UM .c INDIVIDUAL
+# ==========================================
+run-single:
+	@powershell -Command "if ('$(FILE)' -eq '') { Write-Host 'ERRO: Informe o arquivo C! Ex: mingw32-make run-single FILE=out/our_tests/meu_teste.c' -ForegroundColor Red } \
+	else { Write-Host ''; Write-Host ('--- [Running] $(FILE) ---') -ForegroundColor Green; \
+	$$exe = '$(FILE)'.Replace('.c', '.exe'); \
+	$(CC) -w -I. $(FILE) -o $$exe; \
+	if ($$?) { & $$exe } else { Write-Host 'Falha ao compilar $(FILE)' -ForegroundColor Red } }"

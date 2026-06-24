@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 void yyerror(const char *s);
 int yylex(void);
@@ -48,7 +49,7 @@ extern int yylineno;
 %token <bool_val> TOKEN_BOOL
 
 /* Type configuration for rules that return or process text/logic values */
-%type <str_val> with_obs exp actexecute obs action device_list
+%type <str_val> with_obs exp actexecute obs action device_list namedevice observation
 %type <str_val> value
 
 /* Precedence and Ambiguity Resolutions */
@@ -58,7 +59,7 @@ extern int yylineno;
 
 %%
 
-/* PROGRAM -> Now optionally accepts Flex finishing reading empty spaces/newlines */
+/* PROGRAM -> Optionally accepts clean end-of-file residues */
 program:
     devices cmds end_of_file { 
         printf("    // Transpilation finished successfully.\n"); 
@@ -67,7 +68,7 @@ program:
 
 end_of_file:
     /* empty */
-  | TOKEN_PERIOD /* absorbs any residual period if present in the global scope */
+  | TOKEN_PERIOD /* absorbs any residual trailing period */
 ;
 
 /* DEVICES -> DEVICES DEVICE | DEVICE */
@@ -78,24 +79,24 @@ devices:
 
 /* DEVICE -> dispositivo: { namedevice with_obs } */
 device:
-    TOKEN_DEVICE_KW TOKEN_OPEN_BRACE TOKEN_IDENTIFIER with_obs TOKEN_CLOSE_BRACE {
-        if ($4 == NULL) {
+    TOKEN_DEVICE_KW TOKEN_TWO_POINTS TOKEN_OPEN_BRACE namedevice with_obs TOKEN_CLOSE_BRACE {
+        if ($5 == NULL) {
             printf("    // Registering standalone device\n");
-            printf("    const char* %s = \"%s\";\n\n", $3, $3);
+            printf("    const char* %s = \"%s\";\n\n", $4, $4);
         } else {
             printf("    // Registering device with sensor bound\n");
-            printf("    const char* %s = \"%s\";\n", $3, $3);
-            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $4);
-            free($4);
+            printf("    const char* %s = \"%s\";\n", $4, $4);
+            printf("    unsigned int %s = 0; // Implicit initialization to 0\n\n", $5);
+            free($5);
         }
-        free($3);
+        free($4);
     }
 ;
 
 /* Factoring of ", observation" */
 with_obs:
-    TOKEN_COMMA TOKEN_IDENTIFIER { 
-        $$ = $2;
+    TOKEN_COMMA observation { 
+        $$ = $2; 
     }
   | /* empty = safe epsilon */ { 
         $$ = NULL; 
@@ -117,7 +118,7 @@ cmd:
 
 /* ATTRIB -> set observation = EXP */
 attrib:
-    TOKEN_SET_KW TOKEN_IDENTIFIER TOKEN_EQUAL exp {
+    TOKEN_SET_KW observation TOKEN_EQUAL exp {
         printf("    // Setting sensor or expression value\n");
         printf("    %s = %s;\n\n", $2, $4);
         free($2);
@@ -163,7 +164,7 @@ obsact:
 
 /* OBS -> observation oplogic VAR | OBS && OBS */
 obs:
-    TOKEN_IDENTIFIER TOKEN_OPLOGIC value {
+    observation TOKEN_OPLOGIC value {
         char *buffer;
         asprintf(&buffer, "%s %s %s", $1, $2, $3);
         $$ = buffer;
@@ -189,9 +190,9 @@ act:
   | actalert
 ;
 
-/* ACTEXECUTE -> ACTION namedevice (Fixed: variables are now passed as identifiers, not quoted strings) */
+/* ACTEXECUTE -> ACTION namedevice (Passed as identifiers) */
 actexecute:
-    action TOKEN_IDENTIFIER {
+    action namedevice {
         char *buffer;
         asprintf(&buffer, "%s(%s)", $1, $2);
         $$ = buffer;
@@ -202,8 +203,7 @@ actexecute:
 
 /* ACTALERT -> Single device alert or broadcast alert (para todos:) */
 actalert:
-    TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS TOKEN_IDENTIFIER {
-        // Option A: Alert to a single explicit device variable
+    TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS namedevice {
         if ($4 == NULL) {
             printf("    alerta_sem_var(%s, %s);\n\n", $6, $3);
         } else {
@@ -214,7 +214,6 @@ actalert:
         free($6);
     }
   | TOKEN_SEND_ALERT_KW TOKEN_OPEN_PARENTHESIS TOKEN_MSG with_obs TOKEN_CLOSE_PARENTHESIS TOKEN_FOR_ALL_KW TOKEN_TWO_POINTS device_list {
-        // Option B: Extra Feature Broadcast (para todos:)
         char* token = strtok($8, "|");
         while (token != NULL) {
             if ($4 == NULL) {
@@ -232,12 +231,12 @@ actalert:
     }
 ;
 
-/* DEVICE_LIST -> Separates broadcast target tokens with internal pipes for tokenizing */
+/* DEVICE_LIST -> Builds pipe-separated list of tokens for the broadcast scanner */
 device_list:
-    TOKEN_IDENTIFIER {
+    namedevice {
         $$ = $1;
     }
-  | device_list TOKEN_COMMA TOKEN_IDENTIFIER {
+  | device_list TOKEN_COMMA namedevice {
         asprintf(&$$, "%s|%s", $1, $3);
         free($1);
         free($3);
@@ -251,6 +250,33 @@ action:
   | TOKEN_TURN_OFF_KW    { $$ = strdup("desligar"); }
 ;
 
+/* ========================================================================= */
+/* VALIDAÇÕES DE CONTEXTO (Regras Intermediárias)                            */
+/* ========================================================================= */
+
+/* NAMEDEVICE -> Apenas letras! Barra a compilação se encontrar números. */
+namedevice:
+    TOKEN_IDENTIFIER {
+        for (int i = 0; $1[i] != '\0'; i++) {
+            if (!isalpha((unsigned char)$1[i])) {
+                char error_msg[256];
+                sprintf(error_msg, "Semantic Error: Device name '%s' contains invalid characters. Only letters are allowed.", $1);
+                yyerror(error_msg);
+                free($1);
+                YYABORT; /* Aborta o yyparse() imediatamente com falha! */
+            }
+        }
+        $$ = $1;
+    }
+;
+
+/* OBSERVATION -> Aceita letras e números (apenas repassa o token) */
+observation:
+    TOKEN_IDENTIFIER {
+        $$ = $1;
+    }
+;
+
 %%
 
 void yyerror(const char *s) {
@@ -258,38 +284,30 @@ void yyerror(const char *s) {
 }
 
 int main() {
-    // Redirects standard output to output.c
     if (freopen("output.c", "w", stdout) == NULL) {
         fprintf(stderr, "Error: Could not redirect output to output.c.\n");
         return 1;
     }
 
-    // Prints the header into the C file
     printf("#include <stdio.h>\n");
     printf("#include <stdbool.h>\n");
     printf("#include \"src/includes/obsact_func.h\"\n\n");
     printf("int main() {\n");
 
-    // Runs the syntax analysis and stores the status (0 = Success, 1 = Failure)
     int parse_status = yyparse();
 
-    // Closes the main block of the C file
     printf("    return 0;\n");
     printf("}\n");
 
-    // Releases the file in Windows so it can be manipulated/deleted if necessary
     fclose(stdout);
 
-    // ---- LOGGING AND ERROR CLEANUP LOGIC ----
+    // ---- LOGGING AND ERROR CLEANUP ----
     if (parse_status == 0) {
-        // Success: Keeps the output.c file intact
-        fprintf(stderr, "[LOG] Compiled and transpiled successfully! Zero syntax errors.\n");
+        fprintf(stderr, "[LOG] Compiled and transpiled successfully! Zero syntax errors.\n\n");
     } else {
-        // Failure: Warns the user and deletes the incomplete output.c
-        fprintf(stderr, "[LOG] FAILED: The file contains syntax errors and will not be generated.\n");
+        fprintf(stderr, "[LOG] FAILED: The file contains syntax errors and will not be generated.\n\n");
         remove("output.c"); 
     }
 
-    // Returns the actual status to the Makefile (makes scripts handle errors properly)
     return parse_status;
 }
