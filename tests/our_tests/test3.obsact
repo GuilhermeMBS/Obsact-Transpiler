@@ -1,0 +1,4 @@
+dispositivo: {higrometro, umidade}
+dispositivo: {umidificador}
+set StatusUmidificador = verificar umidificador.
+se umidade < 40 && StatusUmidificador == 0 entao ligar umidificador.

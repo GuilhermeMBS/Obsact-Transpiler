@@ -1,0 +1,4 @@
+dispositivo: {Termometro, temperatura}
+dispositivo: {MonitorPrincipal}
+dispositivo: {MonitorSecundario}
+se temperatura < 50 entao enviar alerta ("Fogo detectado! Evacuar") para todos: MonitorPrincipal, MonitorSecundario.

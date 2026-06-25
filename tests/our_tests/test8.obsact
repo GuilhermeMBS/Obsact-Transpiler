@@ -1,0 +1,5 @@
+dispositivo: {SensorGas, vazamento}
+dispositivo: {extrator1}
+dispositivo: {extrator2}
+
+se vazamento == true entao enviar alerta ("Vazamento de Gas!") para todos: extrator1; extrator2.

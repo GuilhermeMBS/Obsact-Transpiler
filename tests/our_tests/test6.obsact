@@ -1,0 +1,5 @@
+dispositivo: {Termometro, temperatura}
+dispositivo: {resfriador}
+dispositivo: {painelSala}
+
+se temperatura > 35 entao enviar alerta ("Superaquecimento!") para todos: painelSala, verificar resfriador.
