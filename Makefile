@@ -1,3 +1,5 @@
+SHELL = cmd.exe
+
 # Final executable name
 TARGET = transpiler
 
@@ -60,7 +62,7 @@ test-ours: all
 	foreach ($$f in $$files) { Write-Host ('[Transpilando] ' + $$f.Name); Get-Content $$f.FullName | ./$(TARGET); if (Test-Path output.c) { Move-Item -Path output.c -Destination ('$(OUT_OURS)/' + $$f.BaseName + '.c') -Force } }"
 
 # Aggregates both example and custom test cases into a single target
-tests: tests-examples tests-ours
+tests: test-examples test-ours
 
 # Variables to hold the new runtime dependencies
 RUNTIME_SRCS = src/functions/obsact_func.c src/functions/aux_func.c
