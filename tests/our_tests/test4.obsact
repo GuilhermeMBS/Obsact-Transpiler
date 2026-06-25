@@ -1,0 +1,5 @@
+dispositivo: {Termometro, temperatura}
+dispositivo: {LedAlerta}
+dispositivo: {SireneBlocoA}
+
+se temperatura > 40 entao enviar alerta ("Temperatura crítica detectada!") para todos: LedAlerta, SireneBlocoA.

@@ -1,0 +1,6 @@
+dispositivo: {Termometro, temperatura}
+dispositivo: {moduloLed}
+dispositivo: {moduloBuzzer}
+
+se temperatura > 45 entao
+    enviar alerta ("Fogo!") para todos: moduloLed, moduloBuzzer

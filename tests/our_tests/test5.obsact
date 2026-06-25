@@ -1,0 +1,8 @@
+dispositivo: {higrometro, umidade}
+dispositivo: {umidificador}
+dispositivo: {painelCentral}
+dispositivo: {celularPlantao}
+
+set statusEquipamento = verificar umidificador.
+
+se umidade < 30 && statusEquipamento == 0 entao enviar alerta ("Perigo de ar seco. Nivel atual:", umidade) para todos: painelCentral, celularPlantao.

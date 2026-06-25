@@ -1,0 +1,8 @@
+1. Válido / Registro de standalone devices --> gera const char* para cada um e o loop de transmissão em lote no C.
+2. Válido / Registro com sensor e standalone devices / Inicialização implícita --> umidade e temperatura iniciam em 0, statusEquipamento recebe o retorno de verificar().
+3. Válido / Condicional simples com transmissão em lote --> se a condição for verdadeira, executa o laço para os alvos.
+4. Válido / Condicional composta com operador lógico e verificar --> avalia a expressão lógica completa no if e executa o laço.
+5. Válido / Estrutura condicional completa com se-entao-senao --> se verdadeiro dispara o lote, caso contrário executa a ação individual no bloco else.
+6. Comando inválido / Função verificar em local inapropriado --> erro sintático (Syntax Error) porque a lista de transmissão aceita apenas identificadores separados por vírgula.
+7. Comando sem ponto / Omissão do delimitador terminal --> erro sintático (Syntax Error) porque a gramática exige o token de ponto final para fechar o comando.
+8. Erro léxico e sintático / Caractere separador inválido (;) --> erro léxico de caractere desconhecido seguido de quebra sintática por falta da vírgula obrigatória.
