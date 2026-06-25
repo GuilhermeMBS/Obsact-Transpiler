@@ -1,0 +1,4 @@
+dispositivo : { Ventilador , velocidade }
+
+se velocidade > 3 entao 
+    enviar alerta ("Atencao! O ventilador entrou em estado critico de rotacao e a velocidade atual precisa ser urgentemente reduzida para evitar superaquecimento do motor interno do sistema) Ventilador .
